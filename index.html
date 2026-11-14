@@ -1,0 +1,389 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CIA World Factbook Explorer</title>
+<style>
+:root{--purple:#6842a5;--purple2:#8d68cc;--ink:#261c38;--muted:#7d728e;--bg:#f6f3fa;--line:#e9e2f1;--card:#fff;--soft:#f1eafa;--shadow:0 8px 28px #35204b0b}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 Inter,Segoe UI,Arial,sans-serif}
+.app{min-height:100vh;display:grid;grid-template-columns:258px minmax(0,1fr)}
+.sidebar{position:sticky;top:0;height:100vh;background:#21152f;color:#eee8f6;padding:24px 16px;display:flex;flex-direction:column}
+.brand{display:flex;align-items:center;gap:12px;padding:4px 10px 25px}
+.brand-mark{height:40px;width:40px;border-radius:12px;background:linear-gradient(145deg,#a884e4,#6540a2);display:grid;place-items:center;color:white;font-size:20px;font-weight:800}
+.brand strong{display:block;font-size:15px;line-height:1.2}.brand small{color:#b7a9ca;font-size:11px}
+.nav-label{color:#a89ab9;font-size:10px;letter-spacing:1.6px;text-transform:uppercase;padding:8px 12px}
+nav{display:grid;gap:5px}.nav-button{border:0;background:transparent;color:#d7cde3;text-align:left;padding:11px 12px;border-radius:9px;display:flex;gap:12px;align-items:center;font-size:13px}
+.nav-button:hover{background:#342443;color:#fff}.nav-button.active{background:#6842a5;color:#fff;box-shadow:0 5px 16px #130b1f50}
+.nav-icon{width:19px;text-align:center;font-size:15px}.sidebar-note{margin-top:auto;padding:14px 12px;color:#b7a9ca;font-size:11px;border-top:1px solid #433450}
+.main{min-width:0;padding:28px clamp(18px,4vw,52px) 52px;max-width:1600px;width:100%;margin:auto}
+.topbar{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:26px}
+.eyebrow{color:var(--purple);font-size:11px;letter-spacing:1.5px;text-transform:uppercase;font-weight:700}
+h1{font-size:29px;line-height:1.2;margin:5px 0;color:#291d3a}h2{font-size:18px;margin:0 0 6px}h3{font-size:15px;margin:0 0 5px}
+.subtitle{color:var(--muted);margin:0}.connection{border:1px solid var(--line);background:white;border-radius:999px;padding:8px 12px;color:#5d4b70;font-size:12px;white-space:nowrap}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#31a779;margin-right:7px}
+.page{display:none}.page.active{display:block}
+.cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin:20px 0}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px;box-shadow:var(--shadow);min-width:0}
+.metric-label{color:var(--muted);font-size:12px}.metric-value{font-size:26px;font-weight:750;margin-top:7px;color:#3b2855}.metric-note{font-size:11px;color:#8e829d;margin-top:3px}
+.grid-2{display:grid;grid-template-columns:1.15fr .85fr;gap:16px}.grid-even{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.section-head{display:flex;justify-content:space-between;gap:14px;align-items:flex-end;margin:25px 0 13px}
+.panel{background:white;border:1px solid var(--line);border-radius:14px;padding:20px;box-shadow:var(--shadow);min-width:0}
+.panel p{color:var(--muted);margin:5px 0 15px}
+.controls{display:flex;gap:9px;align-items:center;flex-wrap:wrap}
+input,select{font:inherit;color:var(--ink);background:#fff;border:1px solid #dcd2e8;border-radius:8px;padding:10px 11px;min-height:40px}
+input{min-width:180px}select{max-width:100%}
+button.primary,.primary{background:var(--purple);border:0;color:#fff;border-radius:8px;padding:10px 14px;font:600 13px inherit;cursor:pointer}
+button.primary:hover{background:#55328c}
+button.secondary{background:var(--soft);border:1px solid #e5d9f3;color:#5a3b87;border-radius:8px;padding:9px 12px;font:600 12px inherit;cursor:pointer}
+button.ghost{background:#fff;border:1px solid var(--line);color:#5d4b70;border-radius:8px;padding:8px 10px;cursor:pointer}
+.status{color:var(--muted);font-size:12px;margin-top:12px;min-height:18px}
+.table-wrap{overflow:auto;max-width:100%}table{width:100%;border-collapse:collapse;margin-top:13px;font-size:13px;white-space:nowrap}
+th,td{text-align:left;border-bottom:1px solid #f0ebf5;padding:10px 9px}th{font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:#82758f;background:#fcfbfd;position:sticky;top:0}
+tbody tr:hover{background:#fbf9fd}.rank{color:#8d68cc;font-weight:700}
+.pill{display:inline-flex;background:#f1eafa;color:#5f4287;border-radius:99px;padding:4px 9px;font-size:11px;margin:3px}
+.bar-track{height:7px;background:#eee8f5;border-radius:10px;min-width:75px}.bar-fill{height:7px;background:linear-gradient(90deg,#a884e4,#6842a5);border-radius:10px}
+.profile-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:16px}
+.profile-item{background:#faf8fc;border:1px solid #f0ebf5;border-radius:9px;padding:10px 12px}
+.profile-item small{display:block;color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.5px}
+.profile-item strong{display:block;margin-top:3px;font-size:14px;overflow-wrap:anywhere}
+.chips{display:flex;gap:7px;flex-wrap:wrap;margin:12px 0}
+.country-chip{background:#f1eafa;color:#563781;border-radius:999px;padding:5px 7px 5px 11px;display:inline-flex;align-items:center;gap:7px}
+.country-chip button{border:0;border-radius:50%;background:#e2d4f2;color:#503274;cursor:pointer;width:20px;height:20px}
+.notice{background:#fff9eb;border:1px solid #f1dfb9;color:#72541e;padding:13px 15px;border-radius:10px;font-size:12px;margin:14px 0}
+.insight{border-left:3px solid var(--purple2);background:#fbf9fd;padding:12px 14px;margin:10px 0;border-radius:0 8px 8px 0}
+.empty{color:var(--muted);padding:16px 0}
+.page-intro{margin-bottom:20px}
+@media(max-width:1000px){.app{grid-template-columns:215px minmax(0,1fr)}.cards{grid-template-columns:repeat(2,minmax(0,1fr))}.grid-2,.grid-even{grid-template-columns:1fr}}
+@media(max-width:700px){.app{display:block}.sidebar{position:relative;height:auto;padding:12px}.brand{padding:4px 8px 12px}.sidebar-note,.nav-label{display:none}nav{display:flex;overflow:auto;padding-bottom:3px}.nav-button{white-space:nowrap;padding:9px 10px}.main{padding:22px 14px 36px}.topbar{align-items:flex-start;flex-direction:column}.cards{grid-template-columns:1fr 1fr}.profile-grid{grid-template-columns:1fr 1fr}h1{font-size:25px}}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark">C</div>
+      <div><strong>CIA World Factbook</strong><small>Country Explorer</small></div>
+    </div>
+    <div class="nav-label">Explore</div>
+    <nav id="mainNav">
+      <button class="nav-button active" data-page="dashboard"><span class="nav-icon">⌂</span>Dashboard</button>
+      <button class="nav-button" data-page="profile"><span class="nav-icon">◎</span>Country Profile</button>
+      <button class="nav-button" data-page="comparison"><span class="nav-icon">⇄</span>Country Comparison</button>
+      <button class="nav-button" data-page="rankings"><span class="nav-icon">↕</span>Country Rankings</button>
+      <button class="nav-button" data-page="regional"><span class="nav-icon">◉</span>Regional Analysis</button>
+      <button class="nav-button" data-page="insights"><span class="nav-icon">◈</span>Insights &amp; Analytics</button>
+      <button class="nav-button" data-page="filters"><span class="nav-icon">⌕</span>Search &amp; Filters</button>
+    </nav>
+    <div class="sidebar-note">100-country dataset · 25 indicators<br>SQLite + FastAPI</div>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <div>
+        <div class="eyebrow">Country Intelligence</div>
+        <h1 id="pageTitle">Dashboard</h1>
+        <p class="subtitle" id="pageSubtitle">A high-level view of the country dataset.</p>
+      </div>
+      <div class="connection" id="connection"><span class="dot"></span>Connecting to country data…</div>
+    </div>
+
+    <section class="page active" id="page-dashboard">
+      <div class="cards">
+        <div class="card"><div class="metric-label">Countries in dataset</div><div class="metric-value" id="countryCount">—</div><div class="metric-note">Country-level coverage</div></div>
+        <div class="card"><div class="metric-label">Numeric indicators</div><div class="metric-value">25</div><div class="metric-note">Across people, economy, energy, geography</div></div>
+        <div class="card"><div class="metric-label">Regions represented</div><div class="metric-value" id="regionCount">—</div><div class="metric-note">UN geographic regions</div></div>
+        <div class="card"><div class="metric-label">Largest population</div><div class="metric-value" id="largestPopulation">—</div><div class="metric-note" id="largestCountry">Loading ranking…</div></div>
+      </div>
+      <div class="grid-2">
+        <div class="panel">
+          <div class="section-head" style="margin:0"><div><h2>Most populous countries</h2><p style="margin-bottom:0">Top 5 by population</p></div><button class="ghost" data-goto="rankings">All rankings →</button></div>
+          <div id="homePopulation"></div>
+        </div>
+        <div class="panel">
+          <h2>Project questions</h2>
+          <p>Use the sections to explore country profiles, comparisons, regional summaries, and indicator rankings.</p>
+          <div class="insight"><strong>Digital readiness</strong><br>Compare internet use with income, urbanization, and literacy.</div>
+          <div class="insight"><strong>Development gap</strong><br>Find populous countries with relatively low GDP per capita.</div>
+          <div class="insight"><strong>Electricity balance</strong><br>2024 demand exceeded generation in 52 of 99 countries with matched data.</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="page" id="page-profile">
+      <div class="page-intro"><h2>Country Profile</h2><p class="subtitle">Choose a country to inspect all available indicators.</p></div>
+      <div class="panel">
+        <div class="controls">
+          <input id="profileInput" list="countryOptions" placeholder="Start typing a country name">
+          <button class="primary" id="profileButton">View profile</button>
+        </div>
+        <div id="profileStatus" class="status">Country suggestions load with the dataset.</div>
+        <div id="profileResult"></div>
+      </div>
+    </section>
+
+    <section class="page" id="page-comparison">
+      <div class="page-intro"><h2>Country Comparison</h2><p class="subtitle">Compare 2 to 10 countries across the available indicators.</p></div>
+      <div class="panel">
+        <div class="controls">
+          <input id="compareInput" list="countryOptions" placeholder="Start typing a country name">
+          <button class="primary" id="addCompare">Add country</button>
+          <button class="secondary" id="clearCompare">Clear selection</button>
+        </div>
+        <div id="compareChips" class="chips"></div>
+        <button class="primary" id="compareButton">Compare selected</button>
+        <div id="compareStatus" class="status">Add at least two countries.</div>
+        <div class="table-wrap" id="compareResult"></div>
+      </div>
+    </section>
+
+    <section class="page" id="page-rankings">
+      <div class="page-intro"><h2>Country Rankings</h2><p class="subtitle">Rank the top 10 countries by any available indicator.</p></div>
+      <div class="panel">
+        <div class="controls"><label for="rankIndicator"><strong>Rank by</strong></label><select id="rankIndicator"></select></div>
+        <div id="rankStatus" class="status"></div>
+        <div class="table-wrap"><table><thead><tr><th>Rank</th><th>Country</th><th>Value</th><th>Relative scale</th></tr></thead><tbody id="rankRows"></tbody></table></div>
+      </div>
+    </section>
+
+    <section class="page" id="page-regional">
+      <div class="page-intro"><h2>Regional Analysis</h2><p class="subtitle">Summarize country indicators by UN geographic region.</p></div>
+      <div class="panel">
+        <div class="controls"><label for="regionSelect"><strong>Region</strong></label><select id="regionSelect"></select><button class="primary" id="regionButton">Load regional summary</button></div>
+        <div id="regionStatus" class="status">Choose a region.</div>
+        <div id="regionMetrics" class="profile-grid"></div>
+        <div id="regionCountries"></div>
+      </div>
+    </section>
+
+    <section class="page" id="page-insights">
+      <div class="page-intro"><h2>Insights &amp; Analytics</h2><p class="subtitle">Explore patterns and limits in the available data.</p></div>
+      <div class="grid-even">
+        <div class="panel">
+          <h2>Development gap</h2>
+          <p>Lowest GDP per capita among the 25 most populous countries.</p>
+          <div class="table-wrap"><table><thead><tr><th>Country</th><th>Population</th><th>GDP per capita</th></tr></thead><tbody id="developmentRows"></tbody></table></div>
+        </div>
+        <div class="panel">
+          <h2>Digital access and prosperity</h2>
+          <p>Association from the EDA notebook, based on countries with both indicators.</p>
+          <div class="insight"><strong>GDP per capita vs internet use</strong><br>Spearman correlation: <b>0.91</b></div>
+          <div class="insight"><strong>Urban population vs internet use</strong><br>Pearson correlation: <b>0.78</b></div>
+          <div class="insight"><strong>Literacy vs GDP per capita</strong><br>Spearman correlation: <b>0.81</b></div>
+          <div class="notice">These are associations in this dataset; they do not establish cause and effect.</div>
+        </div>
+      </div>
+      <div class="panel" style="margin-top:16px">
+        <h2>Which countries have electricity demand above generation?</h2>
+        <p>Top 10 countries by the 2024 electricity demand-generation gap.</p>
+        <div class="notice"><strong>Source and coverage:</strong> Ember Yearly Electricity Data, 2024. Values are TWh (1 TWh = 1 billion kWh). Matched by ISO country code for 99 of 100 dashboard countries; Ukraine has no 2024 match. This compares electricity demand and generation, not total energy use across all fuels.</div>
+        <div class="table-wrap"><table><thead><tr><th>Country</th><th>Generation (TWh)</th><th>Demand (TWh)</th><th>Demand above generation (TWh)</th><th>Net imports (TWh)</th></tr></thead><tbody id="energyRows"></tbody></table></div>
+      </div>
+    </section>
+
+    <section class="page" id="page-filters">
+      <div class="page-intro"><h2>Search &amp; Filters</h2><p class="subtitle">Find countries by name or set a numeric range for an indicator.</p></div>
+      <div class="grid-even">
+        <div class="panel">
+          <h2>Country search</h2><p>Suggestions come from the dataset.</p>
+          <div class="controls"><input id="filterCountryInput" list="countryOptions" placeholder="Start typing a country"><button class="primary" id="filterCountryButton">Find country</button></div>
+          <div id="countrySearchResult" class="result"></div>
+        </div>
+        <div class="panel">
+          <h2>Indicator filter</h2><p>Find up to 25 countries within the selected range.</p>
+          <div class="controls"><select id="filterIndicator"></select></div>
+          <div class="controls" style="margin-top:9px"><input id="filterMin" type="number" placeholder="Minimum (optional)"><input id="filterMax" type="number" placeholder="Maximum (optional)"><button class="primary" id="runFilter">Apply filter</button></div>
+          <div id="filterStatus" class="status"></div>
+          <div class="table-wrap"><table><thead><tr><th>Country</th><th>Value</th><th>Region</th></tr></thead><tbody id="filterRows"></tbody></table></div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+<datalist id="countryOptions"></datalist>
+<script>
+const specs = [
+ {key:"population",label:"Population",unit:"people"},
+ {key:"population_growth_percent",label:"Population growth",unit:"%"},
+ {key:"land_area_sq_km",label:"Land area",unit:"sq km"},
+ {key:"population_density_per_sq_km",label:"Population density",unit:"people / sq km"},
+ {key:"gdp_ppp_usd_billions",label:"GDP (PPP)",unit:"USD billions"},
+ {key:"gdp_per_capita_usd",label:"GDP per capita",unit:"USD / person"},
+ {key:"median_age_years",label:"Median age",unit:"years"},
+ {key:"life_expectancy_years",label:"Life expectancy",unit:"years"},
+ {key:"birth_rate_per_1000",label:"Birth rate",unit:"per 1,000 people"},
+ {key:"death_rate_per_1000",label:"Death rate",unit:"per 1,000 people"},
+ {key:"infant_mortality_per_1000",label:"Infant mortality",unit:"per 1,000 live births"},
+ {key:"urban_population_percent",label:"Urban population",unit:"%"},
+ {key:"urbanization_rate_percent",label:"Urbanization rate",unit:"%"},
+ {key:"literacy_percent",label:"Literacy",unit:"%"},
+ {key:"internet_users_percent",label:"Internet users",unit:"%"},
+ {key:"exports_usd_billions",label:"Exports",unit:"USD billions"},
+ {key:"imports_usd_billions",label:"Imports",unit:"USD billions"},
+ {key:"unemployment_percent",label:"Unemployment",unit:"%"},
+ {key:"inflation_percent",label:"Inflation",unit:"%"},
+ {key:"coastline_km",label:"Coastline",unit:"km"},
+ {key:"land_boundaries_km",label:"Land boundaries",unit:"km"},
+ {key:"electricity_consumption_billion_kwh",label:"Electricity consumption",unit:"billion kWh"},
+ {key:"electricity_imports_billion_kwh",label:"Electricity imports",unit:"billion kWh"},
+ {key:"energy_consumption_per_capita_million_btu",label:"Energy use per capita",unit:"million BTU"},
+ {key:"military_expenditure_percent_gdp",label:"Military expenditure",unit:"% GDP"}
+];
+const pageInfo = {
+ dashboard:["Dashboard","A high-level view of the country dataset."],
+ profile:["Country Profile","Explore all available indicators for one country."],
+ comparison:["Country Comparison","Compare country indicators side by side."],
+ rankings:["Country Rankings","Rank countries across all 25 indicators."],
+ regional:["Regional Analysis","Summaries grouped by geographic region."],
+ insights:["Insights & Analytics","Patterns, comparisons, and data limitations."],
+ filters:["Search & Filters","Find countries by name or indicator range."]
+};
+let countries=[];
+let compareList=[];
+
+function esc(v){return String(v===null||v===undefined?"":v).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
+function num(v){if(v===null||v===undefined||v==="")return NaN;const n=Number(v);return Number.isFinite(n)?n:NaN}
+function fmt(v){if(v===null||v===undefined||v==="")return "—";const n=Number(v);return Number.isFinite(n)?n.toLocaleString(undefined,{maximumFractionDigits:1}):esc(v)}
+function getCountry(name){return countries.find(c=>String(c.country).toLowerCase()===String(name).trim().toLowerCase())}
+function indicatorOptions(){return specs.map(s=>'<option value="'+esc(s.key)+'">'+esc(s.label)+' ('+esc(s.unit)+')</option>').join("")}
+function navTo(page){
+ document.querySelectorAll(".page").forEach(p=>p.classList.toggle("active",p.id==="page-"+page));
+ document.querySelectorAll(".nav-button").forEach(b=>b.classList.toggle("active",b.dataset.page===page));
+ document.getElementById("pageTitle").textContent=pageInfo[page][0];
+ document.getElementById("pageSubtitle").textContent=pageInfo[page][1];
+}
+document.getElementById("mainNav").addEventListener("click",function(e){const b=e.target.closest("[data-page]");if(b)navTo(b.dataset.page)});
+document.querySelectorAll("[data-goto]").forEach(b=>b.addEventListener("click",()=>navTo(b.dataset.goto)));
+
+async function loadData(){
+ const connection=document.getElementById("connection");
+ try{
+  const response=await fetch("/countries?limit=300");
+  if(!response.ok)throw new Error("API returned "+response.status);
+  countries=await response.json();
+  connection.innerHTML='<span class="dot"></span>'+countries.length+' countries loaded';
+  document.getElementById("countryCount").textContent=countries.length;
+  const regions=[...new Set(countries.map(c=>c.region).filter(Boolean))].sort();
+  document.getElementById("regionCount").textContent=regions.length;
+  document.getElementById("countryOptions").innerHTML=countries.map(c=>'<option value="'+esc(c.country)+'"></option>').join("");
+  document.getElementById("regionSelect").innerHTML=regions.map(r=>'<option value="'+esc(r)+'">'+esc(r)+'</option>').join("");
+  document.getElementById("rankIndicator").innerHTML=indicatorOptions();
+  document.getElementById("filterIndicator").innerHTML=indicatorOptions();
+  renderHome();
+  renderRanking();
+  renderInsights();
+ }catch(error){
+  connection.textContent="API unavailable · "+error.message;
+  document.getElementById("status").textContent="Could not load country data. Make sure Uvicorn is running.";
+ }
+}
+function renderHome(){
+ const top=[...countries].filter(c=>Number.isFinite(num(c.population))).sort((a,b)=>num(b.population)-num(a.population)).slice(0,5);
+ if(top.length){
+  document.getElementById("largestPopulation").textContent=(num(top[0].population)/1e9).toFixed(2)+"B";
+  document.getElementById("largestCountry").textContent=top[0].country;
+  const max=num(top[0].population);
+  document.getElementById("homePopulation").innerHTML='<table><thead><tr><th>Country</th><th>Population</th><th></th></tr></thead><tbody>'+top.map(c=>'<tr><td>'+esc(c.country)+'</td><td>'+fmt(c.population)+'</td><td><div class="bar-track"><div class="bar-fill" style="width:'+Math.max(2,num(c.population)/max*100)+'%"></div></div></td></tr>').join("")+'</tbody></table>';
+ }
+}
+function renderProfile(c){
+ const entries=[["ISO2 code",c.iso2],["Region",c.region]].concat(specs.map(s=>[s.label+" · "+s.unit,c[s.key]]));
+ document.getElementById("profileResult").innerHTML='<h3 style="margin-top:18px">'+esc(c.country)+'</h3><div class="profile-grid">'+entries.map(([label,value])=>'<div class="profile-item"><small>'+esc(label)+'</small><strong>'+fmt(value)+'</strong></div>').join("")+'</div>';
+}
+document.getElementById("profileButton").addEventListener("click",function(){
+ const c=getCountry(document.getElementById("profileInput").value);
+ const status=document.getElementById("profileStatus");
+ if(!c){status.textContent="Choose a country name from the suggestions.";document.getElementById("profileResult").innerHTML="";return}
+ status.textContent="Profile loaded.";renderProfile(c);
+});
+document.getElementById("profileInput").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();document.getElementById("profileButton").click()}});
+
+function renderCompareChips(){
+ document.getElementById("compareChips").innerHTML=compareList.map((c,i)=>'<span class="country-chip">'+esc(c.country)+'<button data-remove="'+i+'" aria-label="Remove '+esc(c.country)+'">×</button></span>').join("");
+}
+document.getElementById("addCompare").addEventListener("click",function(){
+ const input=document.getElementById("compareInput"), c=getCountry(input.value), status=document.getElementById("compareStatus");
+ if(!c){status.textContent="Choose an exact country name from the suggestions.";return}
+ if(compareList.some(x=>x.country===c.country)){status.textContent="That country is already selected.";return}
+ if(compareList.length>=10){status.textContent="The comparison limit is 10 countries.";return}
+ compareList.push(c);input.value="";status.textContent=compareList.length+" countries selected.";renderCompareChips();
+});
+document.getElementById("compareChips").addEventListener("click",function(e){
+ const b=e.target.closest("[data-remove]");if(!b)return;
+ compareList.splice(Number(b.dataset.remove),1);renderCompareChips();
+ document.getElementById("compareStatus").textContent=compareList.length+" countries selected.";
+});
+document.getElementById("clearCompare").addEventListener("click",function(){
+ compareList=[];renderCompareChips();document.getElementById("compareResult").innerHTML="";
+ document.getElementById("compareStatus").textContent="Selection cleared.";
+});
+document.getElementById("compareButton").addEventListener("click",function(){
+ const status=document.getElementById("compareStatus");
+ if(compareList.length<2){status.textContent="Add at least two countries.";return}
+ status.textContent="Comparing "+compareList.length+" countries across "+specs.length+" indicators.";
+ document.getElementById("compareResult").innerHTML='<table><thead><tr><th>Indicator</th>'+compareList.map(c=>'<th>'+esc(c.country)+'</th>').join("")+'</tr></thead><tbody>'+specs.map(s=>'<tr><td>'+esc(s.label)+' ('+esc(s.unit)+')</td>'+compareList.map(c=>'<td>'+fmt(c[s.key])+'</td>').join("")+'</tr>').join("")+'</tbody></table>';
+});
+function renderRanking(){
+ const key=document.getElementById("rankIndicator").value||"population";
+ const spec=specs.find(s=>s.key===key)||specs[0];
+ const rows=countries.filter(c=>Number.isFinite(num(c[key]))).sort((a,b)=>num(b[key])-num(a[key])).slice(0,10);
+ const max=rows.length?Math.max(...rows.map(c=>num(c[key]))):0;
+ document.getElementById("rankStatus").textContent="Top 10 · "+spec.label+" · "+rows.length+" countries with values";
+ document.getElementById("rankRows").innerHTML=rows.map((c,i)=>'<tr><td class="rank">'+(i+1)+'</td><td>'+esc(c.country)+'</td><td>'+fmt(c[key])+' '+esc(spec.unit)+'</td><td><div class="bar-track"><div class="bar-fill" style="width:'+(max>0?Math.max(2,num(c[key])/max*100):0)+'%"></div></div></td></tr>').join("");
+}
+document.getElementById("rankIndicator").addEventListener("change",renderRanking);
+async function loadRegion(){
+ const region=document.getElementById("regionSelect").value;
+ const status=document.getElementById("regionStatus");
+ status.textContent="Loading regional summary…";
+ try{
+  const response=await fetch("/regions/"+encodeURIComponent(region)+"/summary");
+  if(!response.ok)throw new Error("API returned "+response.status);
+  const data=await response.json();
+  status.textContent=data.region+" · "+data.country_count+" countries";
+  document.getElementById("regionMetrics").innerHTML=specs.map(s=>'<div class="profile-item"><small>Average '+esc(s.label)+' · '+esc(s.unit)+'</small><strong>'+fmt(data.average_indicators[s.key])+'</strong></div>').join("");
+  document.getElementById("regionCountries").innerHTML='<h3 style="margin-top:20px">Countries in '+esc(data.region)+'</h3>'+data.countries.map(n=>'<span class="pill">'+esc(n)+'</span>').join("");
+ }catch(error){status.textContent="Could not load regional summary: "+error.message}
+}
+document.getElementById("regionButton").addEventListener("click",loadRegion);
+function renderInsights(){
+ const population=countries.filter(c=>Number.isFinite(num(c.population))&&Number.isFinite(num(c.gdp_per_capita_usd)));
+ const top25=population.slice().sort((a,b)=>num(b.population)-num(a.population)).slice(0,25);
+ const gap=top25.sort((a,b)=>num(a.gdp_per_capita_usd)-num(b.gdp_per_capita_usd)).slice(0,10);
+ document.getElementById("developmentRows").innerHTML=gap.map(c=>'<tr><td>'+esc(c.country)+'</td><td>'+fmt(c.population)+'</td><td>$'+fmt(c.gdp_per_capita_usd)+'</td></tr>').join("");
+ const energy=countries.map(c=>{
+  const generation=num(c.ember_generation_twh), demand=num(c.ember_demand_twh), net=num(c.ember_net_imports_twh);
+  return {country:c.country,generation:generation,demand:demand,net:net,gap:demand-generation};
+ }).filter(c=>Number.isFinite(c.generation)&&Number.isFinite(c.demand)&&c.gap>0)
+  .sort((a,b)=>b.gap-a.gap).slice(0,10);
+ document.getElementById("energyRows").innerHTML=energy.map(c=>'<tr><td>'+esc(c.country)+'</td><td>'+fmt(c.generation)+'</td><td>'+fmt(c.demand)+'</td><td>'+fmt(c.gap)+'</td><td>'+fmt(c.net)+'</td></tr>').join("");
+}
+document.getElementById("filterCountryButton").addEventListener("click",function(){
+ const c=getCountry(document.getElementById("filterCountryInput").value);
+ const box=document.getElementById("countrySearchResult");
+ if(!c){box.textContent="Choose an exact country name from the suggestions.";return}
+ box.innerHTML='<div class="insight"><strong>'+esc(c.country)+'</strong><br>Region: '+esc(c.region)+' · Population: '+fmt(c.population)+' · GDP per capita: $'+fmt(c.gdp_per_capita_usd)+'</div>';
+});
+document.getElementById("runFilter").addEventListener("click",async function(){
+ const key=document.getElementById("filterIndicator").value;
+ const min=document.getElementById("filterMin").value;
+ const max=document.getElementById("filterMax").value;
+ const spec=specs.find(s=>s.key===key);
+ const status=document.getElementById("filterStatus");
+ status.textContent="Searching…";
+ const params=new URLSearchParams({indicator:key,limit:"25"});
+ if(min!=="")params.set("min",min);
+ if(max!=="")params.set("max",max);
+ try{
+  const response=await fetch("/search?"+params.toString());
+  if(!response.ok)throw new Error("API returned "+response.status);
+  const rows=await response.json();
+  document.getElementById("filterRows").innerHTML=rows.map(c=>'<tr><td>'+esc(c.country)+'</td><td>'+fmt(c[key])+' '+esc(spec.unit)+'</td><td>'+esc(c.region)+'</td></tr>').join("");
+  status.textContent="Found "+rows.length+" matching countries (up to 25 shown).";
+ }catch(error){status.textContent="Filter failed: "+error.message}
+});
+loadData();
+</script>
+</body>
+</html>
+
